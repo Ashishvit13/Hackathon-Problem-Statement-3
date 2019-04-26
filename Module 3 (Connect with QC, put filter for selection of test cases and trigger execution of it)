@@ -1,0 +1,37 @@
+Sub connectqc()
+
+    Dim tdc As Object
+        
+    Set tdc = CreateObject("TDApiOle80.TDConnection")
+    tdc.InitConnectionEx "http://usdc2phpqc01:8080/qcbin/"
+    tdc.login "UserID", "Password"
+    tdc.Connect "Domain_Name", "Project_Name"
+    
+    Set objShell = CreateObject("WScript.Shell")
+    Set TSetFact = tdc.TestSetFactory
+    Set tsTreeMgr = tdc.TestSetTreeManager
+    Set tsFolder = tsTreeMgr.NodeByPath("Root\Monthly Release\April 2019\500 Regression Test - Automation\200 Supply\RT\")
+    Set tsList = tsFolder.FindTestSets("Test Scenario Name")
+     
+    Set theTestSet = tsList.Item(1)
+    Set Scheduler = theTestSet.StartExecution("")
+    Scheduler.RunAllLocally = True
+    Scheduler.Run
+    
+    Set execstatus = Scheduler.ExecutionStatus
+    
+    Do While RunFinished = False
+     execstatus.RefreshExecStatusInfo "all", True
+     RunFinished = execstatus.Finished
+     Set EventsList = execstatus.EventsList
+    
+     For Each ExecEventInfoObj In EventsList
+      strNowEvent = ExecEventInfoObj.EventType
+     Next
+    
+     For i = 1 To execstatus.Count
+      Set TestExecStatusobj = execstatus.Item(i)
+      intTestid = TestExecStatusobj.TestInstance
+     Next
+    Loop
+End Sub
