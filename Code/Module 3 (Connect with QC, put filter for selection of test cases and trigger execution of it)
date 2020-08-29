@@ -1,0 +1,39 @@
+Sub connectqc()
+
+	Dim tdc As Object   
+	Set tdc = CreateObject("TDApiOle80.TDConnection")		'Create tdc as ALM Object
+	tdc.InitConnectionEx "http://hpqc_url:8080/qcbin/"		'Need to pass HPQC URL
+    	tdc.login "abc", "xyz"						'Login with abc user in ALM
+    	tdc.Connect "Project_Name", "Domain_Name"			'Connect with Project & Domain
+    
+    	Set objShell = CreateObject("WScript.Shell")
+    	Set TSetFact = tdc.TestSetFactory
+    	Set tsTreeMgr = tdc.TestSetTreeManager
+    	Set tsFolder = tsTreeMgr.NodeByPath("Root\Monthly Release\April 2019\500 Regression Test - Automation\Call\RT\") 'Need to Enter path for Regression Folder in ALM
+    	LastRow_ColC = sht1.Cells(sht1.Rows.Count, "C").End(xlUp).Row
+
+	For TestScenario = 2 To LastRow_ColC
+		Set tsList = tsFolder.FindTestSets(sht1.Cells(TestScenario, "C").Value)		'This loop will take the keywords one by one from (Target Keywords) Column C of Sheet 1 & executes test for that test scenario
+		Set theTestSet = tsList.Item(1)
+		Set Scheduler = theTestSet.StartExecution("")
+		Scheduler.RunAllLocally = True
+		Scheduler.Run
+    
+    		Set execstatus = Scheduler.ExecutionStatus
+    
+    		Do While RunFinished = False						'It will check & update the execution status till it gets TRUE
+	     		execstatus.RefreshExecStatusInfo "all", True				
+	     		RunFinished = execstatus.Finished
+	     		Set EventsList = execstatus.EventsList
+    
+     			For Each ExecEventInfoObj In EventsList
+			      strNowEvent = ExecEventInfoObj.EventType
+			Next
+    
+    			For i = 1 To execstatus.Count
+				Set TestExecStatusobj = execstatus.Item(i)
+				intTestid = TestExecStatusobj.TestInstance
+			Next
+		Loop
+	Next TestScenario
+End Sub
