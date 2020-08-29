@@ -1,0 +1,52 @@
+Sub Data_Read()
+	Dim sht1, sht2 As Worksheet	
+	Dim LastRow As Long
+	Set sht1 = Worksheets("Sheet1")
+	Set sht2 = Worksheets("Sheet2")
+	Dim myFile As String, text As String, textline As String, posLat As Integer, posLong As Integer
+	On Error Resume Next
+	myFile = "C:\Users\ashish.z.jain\Desktop\Testing.txt"
+
+	Open myFile For Input As #1	'Open and read text file which was created in Module 1
+	Do Until EOF(1)
+	    Line Input #1, textline
+	    text = text & textline
+	Loop
+	Close #1
+
+	newString = Replace(text, ",", " ")		'Replacing all special characters from the data
+	newString = Replace(newString, ":", " ")
+	newString = Replace(newString, "-", " ")
+	newString = Replace(newString, "_", " ")
+	newString = Replace(newString, "@", " ")
+	newString = Replace(newString, "#", " ")
+	newString = Replace(newString, ".", " ")
+
+	Words = Split(newString, " ", -1)	'Spliting data with delimiter space to separate out each word
+
+	i = 2
+	For Each element In Words		'This loop will store all the keywords in excel under Sheet1 Column A(Mail Data), whatever are present under mail data
+	  sht1.Cells(i, 1).Value = element
+	  i = i + 1
+	Next element
+
+	LastRow = sht1.Cells(sht1.Rows.Count, "A").End(xlUp).Row
+	For j = 1 To LastRow			'This loop will delete blank rows from Column A(Mail Data) under Sheet 1
+	    If sht1.Cells(j, "A") = vbNullString Then
+	       sht1.Rows(j).EntireRow.Delete
+	    End If
+	Next j
+
+	LastRow_ColA = sht2.Cells(sht2.Rows.Count, "A").End(xlUp).Row
+	For Keywords1 = 2 To LastRow			'These are nested loops which will perform keyword matching from Sheet 1 Column A to Sheet 2 Column A
+	    For Keywords2 = 2 To LastRow_ColA
+	        If ((UCase(sht1.Cells(Keywords1, "A").Value)) = (UCase(sht2.Cells(Keywords2, "A").Value))) Then
+	            LastRow_ColC = sht1.Cells(sht1.Rows.Count, "C").End(xlUp).Row
+	            sht1.Cells(LastRow_ColC + 1, "C").Value = UCase(sht1.Cells(Keywords1, "A").Value)	'Matched keywords will store under Sheet 1 Column C(Target Keywords)
+	        End If
+	    Next Keywords2
+	Next Keywords1
+
+	    sht1.Columns("C:C").Select
+	    sht1.Range("C:C").RemoveDuplicates Columns:=1, Header:=xlNo 'This code of line will remove duplicates keywords from Sheet 1 Column C(Target Keywords)
+End Sub
