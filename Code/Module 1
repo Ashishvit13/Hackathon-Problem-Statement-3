@@ -1,0 +1,28 @@
+'******This Module will read the release note mail from outlook and dump it into a Text File******'
+
+Sub Read_Mail()
+   	On Error Resume Next
+        Set olApp = CreateObject("Outlook.Application")
+        Set olns = olApp.GetNamespace("MAPI")
+        Set objFolder = olns.GetDefaultFolder(6)
+        Set colItems = objFolder.Items
+                           
+        If colItems.Count = 0 Then                                          'this block will execute if Inbox have no emails
+            MsgBox "There are no messages in the folder.", vbInformation, _
+            "Nothing Found"
+            Exit Sub
+        End If
+
+        If colItems.Count > 0 Then                                          'this block will execute if Inbox have emails
+            For Position = colItems.Count To 1 Step -1                      'this loop will iterate on all emails
+                Set Message = colItems.Item(Position)
+                If Message.Unread = True Then                               'this will check mail is unread
+                    Set FSO = CreateObject("Scripting.FileSystemObject")
+                    Set oFile = FSO.CreateTextFile("C:\Users\ashish.z.jain\Desktop\Testing.txt") 'Creating a Text File for release note mail data
+                    oFile.WriteLine (Message.body)
+                    Message.Unread = False
+                End If
+            Next
+            MsgBox ("Operation Completed Successfully!")
+        End If
+End Sub
